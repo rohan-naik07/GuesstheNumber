@@ -1,5 +1,5 @@
 import React, { useState,useRef,useEffect } from 'react';
-import {View,Text,StyleSheet,Button,Alert,FlatList} from 'react-native';
+import {View,Text,StyleSheet,Button,Alert,FlatList,Dimensions} from 'react-native';
 import Colors from '../constants/colors';
 import Card from '../components/Card';
 import {Ionicons} from '@expo/vector-icons';
@@ -29,6 +29,9 @@ const GameScreen = (props)=>{
     const initialGuess = generateRandomBetween(1,100,props.userChoice);
     const [currentGuess,setCurrentGuess] = useState(initialGuess);
     const [pastGuesses, setPastGuesses] = useState([initialGuess.toString()]);
+    const [availableWidth,setavailableWidth] = useState(Dimensions.get('window').width);
+    const [availableHeight,setavailableHeight] = useState(Dimensions.get('window').height);
+    
     var currentLow = useRef(1); // when the component is rerendered the values survive
     var currentHigh = useRef(100);
     const {userChoice,onGameOver} = props;
@@ -37,7 +40,20 @@ const GameScreen = (props)=>{
         if(userChoice === currentGuess || isNaN(currentGuess)){
             onGameOver(pastGuesses.length);
         }
+
     },[currentGuess,userChoice,onGameOver]);
+
+    useEffect(()=>{
+        const updateLayout = ()=>{
+            setavailableWidth(Dimensions.get('window').width);
+            setavailableHeight(Dimensions.get('window').height);
+        }
+        Dimensions.addEventListener('change',updateLayout);
+        return ()=>{
+            Dimensions.removeEventListener('change',updateLayout);
+        }
+    })
+
 
     const nextGuessHandler = direction => {
         if (
@@ -69,6 +85,37 @@ const GameScreen = (props)=>{
           props.onRestart();
       }
 
+    if(availableHeight < 500){
+        return(
+            <View style={styles.screen}>
+                <Text>Opponent's Guess</Text>
+                <View style = {styles.landscape}>
+                <View style={styles.leftView}>
+                    <NumberContainer>{currentGuess}</NumberContainer>
+                    <Card style = {styles.buttonContainer}>
+                        <MyButton onPress={nextGuessHandler.bind(this, 'lower')}>
+                            <Ionicons name="md-remove" size={24} color="white" />
+                        </MyButton>
+                        <MyButton onPress={nextGuessHandler.bind(this, 'greater')}>
+                            <Ionicons name="md-add" size={24} color="white" />
+                        </MyButton>
+                    </Card>
+                    <View style={styles.button}><MyButton onPress={onExitPressed}>Exit</MyButton></View>
+                </View>
+                <View style={styles.rightView}>
+                <View style={styles.listContainer}>
+                <FlatList
+                    keyExtractor={item => item}
+                    data={pastGuesses}
+                    renderItem={renderListItem.bind(this, pastGuesses.length)}
+                    contentContainerStyle={styles.list}/>
+                    </View>
+                </View>
+            </View>
+        </View>
+        );
+    }
+
     return(
         <View style={styles.screen}>
             <Text>Opponent's Guess</Text>
@@ -89,7 +136,7 @@ const GameScreen = (props)=>{
                 renderItem={renderListItem.bind(this, pastGuesses.length)}
                 contentContainerStyle={styles.list}/>
                 </View>
-        </View>
+            </View>
     );
 }
 
@@ -99,10 +146,26 @@ const styles = StyleSheet.create({
         padding : 10,
         alignItems : 'center'
     },
+    landscape: {
+        flex : 1,
+        flexDirection: 'row',
+       justifyContent : 'space-between'
+    },
+    leftView : {
+        flex : 1,
+        margin : 5,
+        justifyContent : 'center',
+        alignItems : 'center'
+    },
+    rightView : {
+        flex : 1,
+        margin : 5,
+        alignItems : 'center'
+    },
     buttonContainer : {
         flexDirection : 'row',
         justifyContent : 'space-around',
-        marginTop : 10,
+        marginTop : Dimensions.get('window').height > 600 ? 20 : 10,
         width : 300,
         maxWidth : '80%'
     },

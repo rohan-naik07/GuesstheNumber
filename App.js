@@ -21,10 +21,10 @@ export default function App() {
 
   if(!dataloaded){
     console.log('font fetch');
-    return <AppLoading 
-            startAsync = {fetchFonts} 
-            onFinish={()=>{setDataloaded(true)}}
-            onError={()=>{console.log(error)}}/>
+    return (<AppLoading 
+      startAsync = {fetchFonts} 
+      onFinish={()=>{setDataloaded(true)}}
+      onError={()=>{console.log('fucking error'+error)}}/>);
   }
 
   const configureNewGameHandler = () => {
